@@ -1,0 +1,36 @@
+name: Gerar APK do HTML
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Extrair projeto
+        run: unzip -q byte-vortex-html.zip
+      - name: Compilar APK de teste
+        working-directory: byte-vortex-html/android
+        run: gradle assembleDebug --stacktrace
+      - name: Enviar APK como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: Byte-Vortex-HTML-APK
+          path: byte-vortex-html/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+      - name: Publicar APK de teste
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp byte-vortex-html/android/app/build/outputs/apk/debug/app-debug.apk Byte-Vortex-HTML-teste.apk
+          gh release create "teste-${GITHUB_RUN_NUMBER}" Byte-Vortex-HTML-teste.apk --title "Byte Vortex HTML - APK de teste ${GITHUB_RUN_NUMBER}" --notes 'APK de teste que inclui o HTML original; assinado com chave de debug. Internet necessária para recursos externos. Catálogo local não é sincronizado automaticamente; login e pagamentos ainda não são seguros.' --prerelease
