@@ -1,0 +1,1833 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Byte Vortex - Loja de Emuladores & Jogos</title>
+  <meta name="theme-color" content="#090714" />
+  <meta name="description" content="Byte Vortex: Loja oficial de emuladores, ROMs e APKs gamers. Baixe grátis ou adquira versões Pro." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Byte Vortex" />
+
+  <!-- Manifest PWA embutido -->
+  <link rel="manifest" href='data:application/manifest+json;utf8,{"name":"Byte Vortex - Loja de Emuladores","short_name":"Byte Vortex","start_url":".","display":"standalone","background_color":"#090714","theme_color":"#7c3aed","icons":[{"src":"https://placehold.co/192x192/7c3aed/ffffff?text=BV","sizes":"192x192","type":"image/png"},{"src":"https://placehold.co/512x512/06b6d4/090714?text=ByteVortex","sizes":"512x512","type":"image/png"}]}' />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@600;700;800;900&display=swap" rel="stylesheet" />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            gamer: ['Orbitron', 'sans-serif'],
+          },
+          colors: {
+            vortex: {
+              bg: '#090714',
+              card: '#120f24',
+              border: '#251f47',
+              purple: '#8b5cf6',
+              cyan: '#06b6d4',
+              pink: '#ec4899'
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #090714;
+      color: #f3f4f6;
+      overflow-x: hidden;
+      touch-action: manipulation;
+    }
+    /* Plano de fundo oficial fixo da Byte Vortex (122273.png) */
+    #vortex-wallpaper-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-image: url('122273.png');
+      background-size: cover;
+      background-position: center top;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      pointer-events: none;
+    }
+    #vortex-wallpaper-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(180deg, rgba(10, 6, 22, 0.68) 0%, rgba(10, 6, 22, 0.76) 55%, rgba(9, 7, 20, 0.86) 100%);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      pointer-events: none;
+    }
+    .vortex-glass-card {
+      background-color: rgba(18, 15, 36, 0.84) !important;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .neon-glow-purple {
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.35);
+    }
+    .vortex-gradient {
+      background: linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%);
+    }
+    .vortex-text-gradient {
+      background: linear-gradient(90deg, #a78bfa, #22d3ee);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    button, a, select, input, textarea, label {
+      touch-action: manipulation;
+    }
+    .vortex-modal.hidden {
+      display: none !important;
+      pointer-events: none !important;
+    }
+    .vortex-modal:not(.hidden) {
+      display: flex !important;
+      pointer-events: auto !important;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #090714;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #251f47;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-purple-600 selection:text-white relative">
+
+  <!-- Camadas Fixas do Plano de Fundo Oficial Byte Vortex -->
+  <div id="vortex-wallpaper-bg" aria-hidden="true"></div>
+  <div id="vortex-wallpaper-overlay" aria-hidden="true"></div>
+
+  <!-- Notificações Toast -->
+  <div id="toast-container" class="fixed top-4 right-4 z-[120] flex flex-col gap-2 max-w-xs sm:max-w-sm pointer-events-none"></div>
+
+  <!-- Cabeçalho / Navbar -->
+  <header class="sticky top-0 z-40 bg-[#090714]/85 backdrop-blur-md border-b border-purple-500/30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2">
+      <!-- Logo Oficial Byte Vortex -->
+      <button type="button" data-action="reset-filters" class="flex items-center gap-2.5 text-left cursor-pointer focus:outline-none">
+        <div class="w-11 h-11 rounded-xl overflow-hidden border-2 border-amber-400/70 shadow-lg neon-glow-purple shrink-0 bg-[#120f24] flex items-center justify-center">
+          <img id="header-brand-logo" src="122273.png" alt="Byte Vortex Logo" class="w-full h-full object-cover object-top" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');" />
+          <i class="fa-solid fa-gamepad text-white text-xl hidden"></i>
+        </div>
+        <div>
+          <h1 class="font-gamer font-extrabold text-base sm:text-xl tracking-wider vortex-text-gradient leading-none drop-shadow">
+            BYTE VORTEX
+          </h1>
+          <span class="text-[10px] sm:text-xs text-amber-300 font-semibold tracking-widest uppercase block mt-0.5">
+            Emuladores &amp; Lojas
+          </span>
+        </div>
+      </button>
+
+      <!-- Ações Rápidas -->
+      <div class="flex items-center gap-2">
+        <!-- Botão APK Oficial -->
+        <button type="button" data-action="open-apk" class="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 text-cyan-300 text-xs sm:text-sm font-bold transition active:scale-95 cursor-pointer">
+          <i class="fa-brands fa-android text-base text-emerald-400"></i>
+          <span>APK</span>
+        </button>
+
+        <!-- Botão Admin Exclusivo (Somente gomesbarbosaraully@gmail.com) -->
+        <button type="button" id="header-admin-btn" data-action="open-admin-upload" class="hidden items-center gap-1.5 px-3 py-2.5 rounded-xl vortex-gradient text-white text-xs sm:text-sm font-extrabold shadow-lg neon-glow-purple transition active:scale-95 cursor-pointer">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <span>+ Postar</span>
+        </button>
+
+        <!-- Status da Conta / Acesso Admin -->
+        <button type="button" id="auth-status-btn" data-action="open-auth" class="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-vortex-card hover:bg-[#1b1636] border border-vortex-border text-xs sm:text-sm font-semibold text-gray-200 transition active:scale-95 cursor-pointer">
+          <i id="auth-icon" class="fa-solid fa-user-astronaut text-purple-400"></i>
+          <span id="auth-label" class="max-w-[95px] sm:max-w-[140px] truncate">Visitante</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Banner Destaque: APK Oficial Byte Vortex & PWA -->
+  <section class="relative z-10 overflow-hidden border-b border-purple-500/30 bg-gradient-to-r from-[#130d2e]/75 via-[#0d152a]/70 to-[#130d2e]/75 backdrop-blur-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
+      <div class="text-center lg:text-left max-w-2xl">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-600/30 border border-amber-400/40 text-amber-200 text-xs font-semibold mb-3 shadow">
+          <span id="sync-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="sync-status-text">Loja Pública Oficial • Retrô é Vida!</span>
+        </div>
+        <h2 class="font-gamer text-2xl sm:text-3xl lg:text-4xl font-black text-white leading-tight drop-shadow-lg">
+          Jogue Clássicos &amp; Emuladores no <span class="vortex-text-gradient">Byte Vortex</span>
+        </h2>
+        <p class="text-gray-200 text-sm sm:text-base mt-2 drop-shadow">
+          Baixe emuladores otimizados, ROMs e APKs exclusivos no seu Android. Escolha entre a <strong class="text-emerald-400">versão gratuita</strong> ou apoie desbloqueando a <strong class="text-cyan-400">versão Pro completa</strong> via PIX ou Cartão.
+        </p>
+      </div>
+
+      <!-- Card Destaque App Android / PWA -->
+      <div class="w-full lg:w-auto vortex-glass-card border border-amber-400/40 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-4 shadow-2xl neon-glow-purple">
+        <div class="w-16 h-16 rounded-2xl overflow-hidden border-2 border-amber-400/70 bg-gradient-to-br from-purple-700 to-cyan-600 flex items-center justify-center shrink-0 shadow-lg">
+          <img id="banner-brand-logo" src="122273.png" alt="Byte Vortex App" class="w-full h-full object-cover object-top" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');" />
+          <i class="fa-brands fa-android text-white text-3xl hidden"></i>
+        </div>
+        <div class="text-center sm:text-left">
+          <div class="flex items-center justify-center sm:justify-start gap-2">
+            <h3 class="font-gamer font-bold text-white text-base">App Byte Vortex APK</h3>
+            <span id="banner-apk-version" class="text-[11px] px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-bold">v1.0.0</span>
+          </div>
+          <p class="text-xs text-gray-300 mt-0.5">Instale no Android ou como Web App (PWA) leve.</p>
+          <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-3">
+            <button type="button" data-action="open-apk" class="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-extrabold text-xs transition flex items-center gap-1.5 active:scale-95 cursor-pointer">
+              <i class="fa-solid fa-download"></i> Baixar APK Oficial
+            </button>
+            <button type="button" data-action="open-pwa" class="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold text-xs transition flex items-center gap-1.5 active:scale-95 cursor-pointer">
+              <i class="fa-solid fa-mobile-screen"></i> Instalar PWA
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Conteúdo Principal -->
+  <main class="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
+    <!-- Barra de Controle do Dono (Aparece somente quando gomesbarbosaraully@gmail.com está logado) -->
+    <div id="admin-welcome-bar" class="hidden mb-6 p-4 rounded-2xl bg-gradient-to-r from-purple-900/80 to-cyan-900/75 backdrop-blur-md border border-amber-400/50 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-500 text-gray-950 flex items-center justify-center shrink-0 shadow">
+          <i class="fa-solid fa-crown"></i>
+        </div>
+        <div>
+          <p class="text-sm font-bold text-white">Painel do Dono Ativo</p>
+          <p class="text-xs text-purple-100">Autenticado como <span class="underline font-semibold">gomesbarbosaraully@gmail.com</span>. Tudo o que você publicar aqui aparece para todos os usuários.</p>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+        <button type="button" data-action="open-wallpaper-config" class="px-3.5 py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/50 text-amber-200 text-xs font-bold transition cursor-pointer">
+          <i class="fa-solid fa-panorama mr-1"></i> Papel de Parede
+        </button>
+        <button type="button" data-action="open-apk-config" class="px-3.5 py-2.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-200 text-xs font-bold transition cursor-pointer">
+          <i class="fa-brands fa-android mr-1"></i> Link do APK
+        </button>
+        <button type="button" data-action="open-admin-upload" class="px-4 py-2.5 rounded-xl vortex-gradient text-white text-xs font-extrabold shadow-lg transition cursor-pointer">
+          <i class="fa-solid fa-plus mr-1"></i> Postar Emulador/Jogo
+        </button>
+      </div>
+    </div>
+
+    <!-- Busca e Filtros de Preço -->
+    <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-5">
+      <div class="relative flex-1">
+        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none"></i>
+        <input
+          type="text"
+          id="search-input"
+          placeholder="Buscar emulador, jogo, PS2, PSP, Dreamcast, SNES..."
+          class="w-full pl-11 pr-4 py-3 rounded-2xl vortex-glass-card border border-purple-500/35 focus:border-amber-400 focus:outline-none text-sm text-white placeholder-gray-400 transition shadow-lg"
+        />
+      </div>
+
+      <!-- Filtro Grátis vs Pago -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
+        <button type="button" data-price-filter="all" class="price-filter-btn px-4 py-2.5 rounded-xl text-xs font-bold bg-purple-600 text-white whitespace-nowrap transition cursor-pointer shadow">
+          Todos
+        </button>
+        <button type="button" data-price-filter="free" class="price-filter-btn px-4 py-2.5 rounded-xl text-xs font-bold vortex-glass-card border border-vortex-border text-gray-200 hover:border-emerald-500/50 whitespace-nowrap transition cursor-pointer">
+          <i class="fa-solid fa-gift text-emerald-400 mr-1"></i> Opção Grátis
+        </button>
+        <button type="button" data-price-filter="paid" class="price-filter-btn px-4 py-2.5 rounded-xl text-xs font-bold vortex-glass-card border border-vortex-border text-gray-200 hover:border-cyan-500/50 whitespace-nowrap transition cursor-pointer">
+          <i class="fa-solid fa-gem text-cyan-400 mr-1"></i> Versão Pro / Paga
+        </button>
+      </div>
+    </div>
+
+    <!-- Abas de Plataformas -->
+    <div id="platform-tabs" class="flex items-center gap-2 overflow-x-auto pb-3 mb-6"></div>
+
+    <!-- Grade de Jogos & Emuladores -->
+    <div id="catalog-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"></div>
+
+    <!-- Estado Vazio Limpo (Sem nenhum item de exemplo) -->
+    <div id="empty-state" class="py-14 text-center vortex-glass-card rounded-3xl border border-purple-500/35 p-6 max-w-xl mx-auto shadow-2xl">
+      <div class="w-16 h-16 rounded-2xl bg-purple-500/20 border border-amber-400/40 flex items-center justify-center mx-auto mb-4 text-amber-300 text-3xl shadow">
+        <i class="fa-solid fa-box-open"></i>
+      </div>
+      <h3 id="empty-state-title" class="font-gamer text-lg sm:text-xl font-bold text-white">
+        Nenhum emulador publicado ainda
+      </h3>
+      <p id="empty-state-desc" class="text-sm text-gray-300 mt-2 leading-relaxed">
+        Ainda não há emuladores neste catálogo público. As publicações salvas apenas em outro aparelho não aparecem aqui automaticamente.
+      </p>
+      <div class="mt-5 flex flex-wrap items-center justify-center gap-3">
+        <button type="button" id="empty-reset-btn" data-action="reset-filters" class="hidden px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold transition cursor-pointer">
+          Limpar Filtros
+        </button>
+        <button type="button" id="empty-admin-post-btn" data-action="open-admin-upload" class="hidden px-5 py-3 rounded-xl vortex-gradient text-white text-xs font-extrabold shadow-lg neon-glow-purple transition cursor-pointer">
+          <i class="fa-solid fa-cloud-arrow-up mr-1.5"></i> Publicar Primeiro Emulador
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Botão Flutuante Exclusivo Admin (Mobile) -->
+  <button type="button" id="fab-admin-upload" data-action="open-admin-upload" class="hidden fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full vortex-gradient text-white shadow-2xl neon-glow-purple items-center justify-center text-2xl transition active:scale-95 cursor-pointer" title="Publicar Novo Emulador ou Jogo">
+    <i class="fa-solid fa-plus"></i>
+  </button>
+
+  <!-- Rodapé -->
+  <footer class="relative z-10 border-t border-purple-500/30 bg-[#070510]/85 backdrop-blur-md py-8 px-4 sm:px-6 mt-12">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+      <div>
+        <div class="flex items-center justify-center sm:justify-start gap-2">
+          <i class="fa-solid fa-crown text-amber-400"></i>
+          <span class="font-gamer font-bold text-white tracking-wider">BYTE VORTEX STORE</span>
+        </div>
+        <p class="text-xs text-gray-300 mt-1">
+          Loja pública oficial de emuladores e jogos. Downloads gratuitos diretos e versões Pro via PIX/Cartão.
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center justify-center gap-3 text-xs text-gray-400">
+        <button type="button" data-action="open-apk" class="hover:text-cyan-400 transition cursor-pointer">Download APK</button>
+        <span>•</span>
+        <button type="button" data-action="open-pwa" class="hover:text-purple-400 transition cursor-pointer">Instalar Web App (PWA)</button>
+        <span>•</span>
+        <button type="button" data-action="open-auth" class="hover:text-white transition cursor-pointer">Acesso Admin</button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 1: DETALHES DO JOGO / EMULADOR (BAIXAR GRÁTIS VS COMPRAR PRO)   -->
+  <!-- ===================================================================== -->
+  <div id="game-detail-modal" class="vortex-modal hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-vortex-card border border-vortex-border rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl my-auto">
+      <div class="relative h-52 sm:h-64 bg-gray-900">
+        <img id="detail-img" src="" alt="Capa do Emulador" class="w-full h-full object-cover" />
+        <div class="absolute inset-0 bg-gradient-to-t from-vortex-card via-vortex-card/40 to-transparent"></div>
+        <button type="button" data-close-modal="game-detail-modal" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/70 hover:bg-black text-white flex items-center justify-center transition cursor-pointer">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+        <div class="absolute bottom-4 left-5 right-5 flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <span id="detail-platform" class="px-3 py-1 rounded-lg bg-purple-600/90 text-white text-xs font-bold uppercase tracking-wider">PS2</span>
+            <h3 id="detail-title" class="font-gamer text-xl sm:text-2xl font-black text-white mt-2">Título</h3>
+          </div>
+          <span id="detail-size" class="px-3 py-1 rounded-lg bg-black/70 border border-white/10 text-gray-200 text-xs font-semibold">
+            <i class="fa-solid fa-hard-drive mr-1 text-cyan-400"></i> 30 MB
+          </span>
+        </div>
+      </div>
+
+      <div class="p-5 sm:p-6">
+        <p id="detail-desc" class="text-sm text-gray-300 leading-relaxed mb-6"></p>
+
+        <!-- Escolha: Versão Gratuita vs Versão Paga -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Caixa Grátis -->
+          <div id="detail-free-box" class="p-4 rounded-2xl bg-[#16132c] border border-emerald-500/35 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-400">Versão Gratuita</span>
+                <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-xs font-bold">R$ 0,00</span>
+              </div>
+              <p class="text-xs text-gray-400 mb-4">
+                Baixe agora gratuitamente sem pagar nada. Acesso imediato sem cadastro.
+              </p>
+            </div>
+            <button type="button" id="detail-free-btn" class="w-full py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-extrabold text-sm transition flex items-center justify-center gap-2 active:scale-95 cursor-pointer">
+              <i class="fa-solid fa-download"></i> Baixar Grátis Agora
+            </button>
+          </div>
+
+          <!-- Caixa Paga / Pro -->
+          <div id="detail-paid-box" class="p-4 rounded-2xl bg-gradient-to-br from-[#1d153b] to-[#112236] border border-cyan-500/40 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-extrabold uppercase tracking-wider text-cyan-400">Versão Pro / Completa</span>
+                <span id="detail-price-tag" class="px-2.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-xs font-extrabold">R$ 19,90</span>
+              </div>
+              <p class="text-xs text-gray-300 mb-4">
+                Pacote completo sem limites, recursos desbloqueados e suporte VIP.
+              </p>
+            </div>
+            <button type="button" id="detail-paid-btn" class="w-full py-3 px-4 rounded-xl vortex-gradient hover:opacity-95 text-white font-extrabold text-sm shadow-lg neon-glow-purple transition flex items-center justify-center gap-2 active:scale-95 cursor-pointer">
+              <i class="fa-solid fa-cart-shopping"></i> Comprar Versão Pro
+            </button>
+          </div>
+        </div>
+
+        <!-- Controles do Admin (Exclusivo gomesbarbosaraully@gmail.com) -->
+        <div id="detail-admin-controls" class="hidden mt-5 pt-4 border-t border-vortex-border flex items-center justify-between gap-3">
+          <span class="text-xs text-purple-300 font-semibold"><i class="fa-solid fa-shield-halved mr-1"></i> Ações do Dono</span>
+          <div class="flex items-center gap-2">
+            <button type="button" id="detail-edit-btn" class="px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold transition cursor-pointer">
+              <i class="fa-solid fa-pen-to-square mr-1"></i> Editar
+            </button>
+            <button type="button" id="detail-delete-btn" class="px-3.5 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-300 text-xs font-bold transition cursor-pointer">
+              <i class="fa-solid fa-trash mr-1"></i> Excluir
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 2: CHECKOUT DE PAGAMENTO (PIX COPIA E COLA + CARTÃO)            -->
+  <!-- ===================================================================== -->
+  <div id="checkout-modal" class="vortex-modal hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-vortex-card border border-cyan-500/40 rounded-3xl max-w-md w-full p-6 shadow-2xl my-auto">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+          <div class="w-9 h-9 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
+            <i class="fa-solid fa-lock"></i>
+          </div>
+          <div>
+            <h3 class="font-gamer font-bold text-white text-base">Checkout Seguro</h3>
+            <p class="text-[11px] text-gray-400">Byte Vortex Pagamentos</p>
+          </div>
+        </div>
+        <button type="button" data-close-modal="checkout-modal" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-gray-200 flex items-center justify-center cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-3.5 rounded-2xl bg-[#0d0a1c] border border-vortex-border mb-4 flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <p class="text-xs text-gray-400">Produto:</p>
+          <p id="checkout-item-name" class="text-sm font-bold text-white truncate">Emulador Pro</p>
+        </div>
+        <div class="text-right shrink-0">
+          <p class="text-xs text-gray-400">Valor:</p>
+          <p id="checkout-item-price" class="font-gamer text-lg font-black text-cyan-400">R$ 19,90</p>
+        </div>
+      </div>
+
+      <!-- Abas PIX / Cartão -->
+      <div class="grid grid-cols-2 gap-2 p-1 rounded-xl bg-[#0d0a1c] border border-vortex-border mb-4">
+        <button type="button" id="tab-pix" data-pay-tab="pix" class="py-2.5 rounded-lg bg-purple-600 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer">
+          <i class="fa-brands fa-pix text-emerald-300"></i> PIX Instantâneo
+        </button>
+        <button type="button" id="tab-card" data-pay-tab="card" class="py-2.5 rounded-lg text-gray-400 hover:text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer">
+          <i class="fa-solid fa-credit-card"></i> Cartão Crédito
+        </button>
+      </div>
+
+      <!-- Aba PIX -->
+      <div id="payment-pix-view" class="space-y-4">
+        <div class="bg-white p-3 rounded-2xl w-40 h-40 mx-auto flex flex-col items-center justify-center shadow-inner">
+          <svg viewBox="0 0 100 100" class="w-32 h-32 text-gray-950 fill-current">
+            <rect x="10" y="10" width="25" height="25" rx="3" />
+            <rect x="15" y="15" width="15" height="15" fill="white" />
+            <rect x="18" y="18" width="9" height="9" />
+            <rect x="65" y="10" width="25" height="25" rx="3" />
+            <rect x="70" y="15" width="15" height="15" fill="white" />
+            <rect x="73" y="18" width="9" height="9" />
+            <rect x="10" y="65" width="25" height="25" rx="3" />
+            <rect x="15" y="70" width="15" height="15" fill="white" />
+            <rect x="18" y="73" width="9" height="9" />
+            <rect x="42" y="12" width="6" height="6" />
+            <rect x="52" y="20" width="6" height="12" />
+            <rect x="42" y="35" width="16" height="6" />
+            <rect x="14" y="45" width="14" height="6" />
+            <rect x="35" y="48" width="10" height="10" />
+            <rect x="52" y="45" width="8" height="14" />
+            <rect x="68" y="42" width="18" height="6" />
+            <rect x="45" y="65" width="12" height="6" />
+            <rect x="65" y="65" width="10" height="10" />
+            <rect x="80" y="72" width="10" height="18" />
+            <rect x="44" y="80" width="16" height="10" />
+          </svg>
+        </div>
+
+        <div>
+          <label class="block text-[11px] text-gray-400 mb-1">Chave PIX (E-mail para pagamento):</label>
+          <div class="flex items-center gap-2">
+            <input id="pix-code-input" type="text" readonly value="raullygomesbarbosa2@gmail.com" class="w-full px-3 py-2.5 rounded-xl bg-[#0d0a1c] border border-emerald-500/40 text-xs text-emerald-300 font-mono font-bold" />
+            <button type="button" data-action="copy-pix" class="px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shrink-0 transition cursor-pointer">
+              <i class="fa-solid fa-copy"></i> Copiar Chave PIX
+            </button>
+          </div>
+          <p class="text-[11px] text-gray-400 mt-1.5">
+            Abra o app do seu banco, escolha <strong>PIX &gt; Chave E-mail</strong> e cole a chave acima.
+          </p>
+        </div>
+
+        <button type="button" data-action="confirm-payment" class="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-extrabold text-sm shadow-lg transition flex items-center justify-center gap-2 active:scale-95 cursor-pointer">
+          <i class="fa-solid fa-circle-check"></i> Já Paguei • Liberar Download
+        </button>
+      </div>
+
+      <!-- Aba Cartão -->
+      <div id="payment-card-view" class="hidden space-y-3">
+        <div>
+          <label class="block text-xs text-gray-400 mb-1">Nome no Cartão</label>
+          <input type="text" id="card-name" placeholder="COMO ESTÁ NO CARTÃO" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0d0a1c] border border-vortex-border text-sm text-white focus:border-purple-500 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs text-gray-400 mb-1">Número do Cartão</label>
+          <input type="text" id="card-number" maxlength="19" placeholder="0000 0000 0000 0000" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0d0a1c] border border-vortex-border text-sm text-white focus:border-purple-500 focus:outline-none" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Validade</label>
+            <input type="text" id="card-exp" maxlength="5" placeholder="MM/AA" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0d0a1c] border border-vortex-border text-sm text-white focus:border-purple-500 focus:outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">CVV</label>
+            <input type="text" id="card-cvv" maxlength="4" placeholder="123" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0d0a1c] border border-vortex-border text-sm text-white focus:border-purple-500 focus:outline-none" />
+          </div>
+        </div>
+        <button type="button" data-action="confirm-payment" class="w-full py-3.5 mt-2 rounded-xl vortex-gradient text-white font-extrabold text-sm shadow-lg transition flex items-center justify-center gap-2 active:scale-95 cursor-pointer">
+          <i class="fa-solid fa-shield-check"></i> Finalizar Pagamento
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 3: DOWNLOAD DO APK OFICIAL DA LOJA BYTE VORTEX                  -->
+  <!-- ===================================================================== -->
+  <div id="apk-modal" class="vortex-modal hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-vortex-card border border-emerald-500/40 rounded-3xl max-w-lg w-full p-6 shadow-2xl my-auto">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-2xl">
+            <i class="fa-brands fa-android"></i>
+          </div>
+          <div>
+            <h3 class="font-gamer font-bold text-white text-lg">Byte Vortex Oficial APK</h3>
+            <p class="text-xs text-emerald-400 font-semibold">Android 7.0+ • Download Direto</p>
+          </div>
+        </div>
+        <button type="button" data-close-modal="apk-modal" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-gray-200 flex items-center justify-center cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="text-sm text-gray-300 mb-5">
+        Baixe o pacote oficial da loja <strong>Byte Vortex</strong> para Android ou instale instantaneamente como Web App (PWA) na tela inicial do seu aparelho.
+      </p>
+
+      <div class="grid grid-cols-3 gap-2 text-center mb-5">
+        <div class="p-2.5 rounded-xl bg-[#0d0a1c] border border-vortex-border">
+          <p class="text-[11px] text-gray-400">Versão</p>
+          <p id="modal-apk-version" class="text-xs font-bold text-white mt-0.5">v1.0.0</p>
+        </div>
+        <div class="p-2.5 rounded-xl bg-[#0d0a1c] border border-vortex-border">
+          <p class="text-[11px] text-gray-400">Tamanho</p>
+          <p id="modal-apk-size" class="text-xs font-bold text-cyan-400 mt-0.5">18.4 MB</p>
+        </div>
+        <div class="p-2.5 rounded-xl bg-[#0d0a1c] border border-vortex-border">
+          <p class="text-[11px] text-gray-400">Licença</p>
+          <p class="text-xs font-bold text-emerald-400 mt-0.5">Grátis / VIP</p>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <button type="button" data-download-apk="free" class="w-full py-3.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-extrabold text-sm transition flex items-center justify-center gap-2 active:scale-95 cursor-pointer">
+          <i class="fa-solid fa-download"></i> Baixar APK Oficial Grátis
+        </button>
+
+        <button type="button" data-download-apk="vip" class="w-full py-3.5 px-4 rounded-xl vortex-gradient hover:opacity-95 text-white font-extrabold text-sm shadow-lg transition flex items-center justify-center gap-2 active:scale-95 cursor-pointer">
+          <i class="fa-solid fa-crown text-amber-300"></i> Adquirir APK VIP (<span id="modal-apk-price">R$ 14,90</span>)
+        </button>
+
+        <button type="button" data-action="switch-apk-to-pwa" class="w-full py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-cyan-300 font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer">
+          <i class="fa-solid fa-mobile-screen-button"></i> Instalar Direto na Tela Inicial (PWA)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 4: INSTRUÇÕES PWA                                               -->
+  <!-- ===================================================================== -->
+  <div id="pwa-guide-modal" class="vortex-modal hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-vortex-card border border-purple-500/40 rounded-3xl max-w-md w-full p-6 shadow-2xl my-auto">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-gamer font-bold text-white text-lg">Instalar Web App (PWA)</h3>
+        <button type="button" data-close-modal="pwa-guide-modal" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-gray-200 flex items-center justify-center cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/30 mb-4">
+        <p class="text-xs text-purple-200 font-semibold">Nome Oficial da Loja PWA:</p>
+        <p class="font-gamer text-base font-bold text-white mt-0.5">Byte Vortex - Loja de Emuladores</p>
+        <div class="mt-2 flex items-center gap-2">
+          <input id="pwa-share-url" type="text" readonly class="w-full px-2.5 py-2 rounded-lg bg-[#090714] border border-vortex-border text-xs text-cyan-300 font-mono" />
+          <button type="button" data-action="copy-store-link" class="px-3 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold shrink-0 cursor-pointer">
+            Copiar
+          </button>
+        </div>
+      </div>
+
+      <ul class="space-y-3 text-xs text-gray-300 mb-5">
+        <li class="flex items-start gap-2.5">
+          <span class="w-5 h-5 rounded-full bg-purple-600 text-white font-bold flex items-center justify-center shrink-0">1</span>
+          <span><strong>No Android (Chrome):</strong> Toque nos <strong>3 pontinhos (⋮)</strong> no canto superior direito e toque em <strong>"Adicionar à tela inicial"</strong> ou <strong>"Instalar aplicativo"</strong>.</span>
+        </li>
+        <li class="flex items-start gap-2.5">
+          <span class="w-5 h-5 rounded-full bg-cyan-600 text-white font-bold flex items-center justify-center shrink-0">2</span>
+          <span><strong>No iPhone (Safari):</strong> Toque no ícone de <strong>Compartilhar</strong> e escolha <strong>"Adicionar à Tela de Início"</strong>.</span>
+        </li>
+      </ul>
+
+      <button type="button" id="pwa-native-install-btn" data-action="native-pwa-install" class="hidden w-full py-3 rounded-xl vortex-gradient text-white font-extrabold text-sm mb-2 cursor-pointer">
+        <i class="fa-solid fa-mobile-screen-button mr-1"></i> Instalar Agora no Dispositivo
+      </button>
+      <button type="button" data-close-modal="pwa-guide-modal" class="w-full py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold cursor-pointer">
+        Fechar
+      </button>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 5: ACESSO / AUTENTICAÇÃO ADMIN (EXCLUSIVO DONO DA LOJA)         -->
+  <!-- ===================================================================== -->
+  <div id="auth-modal" class="vortex-modal hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-vortex-card border border-vortex-border rounded-3xl max-w-md w-full p-6 shadow-2xl my-auto">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl bg-purple-600/20 border border-purple-500/40 flex items-center justify-center text-purple-400">
+            <i class="fa-solid fa-shield-halved text-lg"></i>
+          </div>
+          <div>
+            <h3 class="font-gamer font-bold text-white text-base">Acesso Administrativo</h3>
+            <p class="text-[11px] text-gray-400">Exclusivo para o proprietário da loja</p>
+          </div>
+        </div>
+        <button type="button" data-close-modal="auth-modal" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-gray-200 flex items-center justify-center cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Visão Admin Logado -->
+      <div id="auth-admin-logged-view" class="hidden space-y-4">
+        <div class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center">
+          <i class="fa-solid fa-circle-check text-3xl text-emerald-400 mb-2"></i>
+          <p class="text-sm font-bold text-white">Modo Administrador Ativo</p>
+          <p class="text-xs text-emerald-300 font-mono mt-1">gomesbarbosaraully@gmail.com</p>
+        </div>
+        <button type="button" data-action="logout-admin" class="w-full py-3.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 font-bold text-xs transition cursor-pointer">
+          <i class="fa-solid fa-right-from-bracket mr-1"></i> Sair do Modo Admin
+        </button>
+      </div>
+
+      <!-- Visão Formulário de Login -->
+      <div id="auth-login-form-view" class="space-y-4">
+        <div class="p-3.5 rounded-2xl bg-[#0d0a1c] border border-vortex-border text-xs text-gray-300">
+          <p class="font-semibold text-white mb-1"><i class="fa-solid fa-globe text-cyan-400 mr-1"></i> Visitantes não precisam de login</p>
+          Qualquer usuário pode navegar, baixar grátis ou comprar. O acesso abaixo é exclusivo para o dono gerenciar uploads.
+        </div>
+
+        <form id="admin-login-form" class="space-y-3">
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">E-mail do Administrador</label>
+            <input
+              type="email"
+              id="admin-email-input"
+              required
+              placeholder="gomesbarbosaraully@gmail.com"
+              class="w-full px-3.5 py-3 rounded-xl bg-[#0d0a1c] border border-vortex-border text-sm text-white focus:border-purple-500 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Senha de Acesso do Dono</label>
+            <input
+              type="password"
+              id="admin-pass-input"
+              required
+              placeholder="••••••••"
+              class="w-full px-3.5 py-3 rounded-xl bg-[#0d0a1c] border border-vortex-border text-sm text-white focus:border-purple-500 focus:outline-none"
+            />
+          </div>
+          <button type="submit" class="w-full py-3.5 rounded-xl vortex-gradient text-white font-extrabold text-sm shadow-lg transition active:scale-95 cursor-pointer">
+            <i class="fa-solid fa-key mr-1"></i> Entrar como Administrador
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 6: UPLOAD / EDIÇÃO DE JOGO OU EMULADOR (EXCLUSIVO ADMIN)        -->
+  <!-- ===================================================================== -->
+  <div id="admin-upload-modal" class="vortex-modal hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-vortex-card border border-purple-500/50 rounded-3xl max-w-xl w-full p-6 shadow-2xl my-auto">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl vortex-gradient flex items-center justify-center text-white">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+          </div>
+          <div>
+            <h3 id="admin-modal-heading" class="font-gamer font-bold text-white text-base">Publicar Emulador / Jogo</h3>
+            <p class="text-[11px] text-purple-300">Exclusivo: gomesbarbosaraully@gmail.com</p>
+          </div>
+        </div>
+        <button type="button" data-close-modal="admin-upload-modal" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-gray-200 flex items-center justify-center cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="admin-game-form" class="space-y-3.5 max-h-[75vh] overflow-y-auto pr-1">
+        <input type="hidden" id="edit-game-id" value="" />
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-gray-300 font-semibold mb-1">Nome do Emulador ou Jogo *</label>
+            <input type="text" id="game-title" required placeholder="Ex: AetherSX2 PS2" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0d0a1c] border border-vortex-border text-sm text-white focus:border-purple-500 focus:outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-300 font-semibold mb-1">Plataforma / Categoria *</label>
+            <select id="game-platform" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0d0a1c] border border-vortex-border text-sm text-white focus:border-purple-500 focus:outline-none">
+              <option value="PS2">PlayStation 2 (PS2)</option>
+              <option value="PSP">PlayStation Portable (PSP)</option>
+              <option value="PS1">PlayStation 1 (PS1)</option>
+              <option value="Dreamcast">Dreamcast</option>
+              <option value="SNES">Super Nintendo (SNES)</option>
+              <option value="N64">Nintendo 64 / NDS</option>
+              <option value="GBA">Game Boy Advance (GBA)</option>
+              <option value="Arcade">Arcade / MAME / NeoGeo</option>
+              <option value="Android">Android APK / Outros</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="sm:col-span-2">
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs text-gray-300 font-semibold">Capa (Foto da Galeria ou URL)</label>
+              <label class="cursor-pointer text-[11px] text-purple-400 hover:underline font-bold">
+                <i class="fa-solid fa-image mr-1"></i>Escolher Foto
+                <input type="file" id="game-cover-file" accept="image/*" class="hidden" />
+              </label>
+            </div>
+            <input type="text" id="game-cover" placeholder="https://... ou escolha foto acima" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0d0a1c] border border-vortex-border text-sm text-white focus:border-purple-500 focus:outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-300 font-semibold mb-1">Versão / Tamanho *</label>
+            <input type="text" id="game-size" required placeholder="Ex: v1.5 • 45 MB" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0d0a1c] border border-vortex-border text-sm text-white focus:border-purple-500 focus:outline-none" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs text-gray-300 font-semibold mb-1">Descrição &amp; Recursos *</label>
+          <textarea id="game-desc" rows="2" required placeholder="Descreva o emulador, compatibilidade, melhorias gráficas..." class="w-full px-3.5 py-2 rounded-xl bg-[#0d0a1c] border border-vortex-border text-sm text-white focus:border-purple-500 focus:outline-none"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs text-gray-300 font-semibold mb-1">Modelo de Oferta *</label>
+          <select id="game-offer-type" class="w-full px-3.5 py-2.5 rounded-xl bg-[#0d0a1c] border border-purple-500/40 text-sm text-white focus:outline-none">
+            <option value="both">Grátis + Versão Pro</option>
+            <option value="free">Apenas Grátis (R$ 0,00)</option>
+            <option value="paid">Apenas Pago (Pro)</option>
+          </select>
+        </div>
+
+        <!-- Campos Versão Grátis -->
+        <div id="field-free-group" class="p-3.5 rounded-2xl bg-emerald-500/5 border border-emerald-500/25 space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs text-emerald-400 font-bold"><i class="fa-solid fa-gift mr-1"></i> Link Download Gratuito (MediaFire, Drive, etc.)</label>
+            <button type="button" data-test-url="game-free-url" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[11px] font-bold transition cursor-pointer">
+              Testar Link
+            </button>
+          </div>
+          <input type="text" id="game-free-url" placeholder="https://www.mediafire.com/file/..." class="w-full px-3 py-2 rounded-xl bg-[#0d0a1c] border border-vortex-border text-xs text-white focus:border-emerald-500 focus:outline-none" />
+        </div>
+
+        <!-- Campos Versão Paga -->
+        <div id="field-paid-group" class="p-3.5 rounded-2xl bg-cyan-500/5 border border-cyan-500/25 space-y-2.5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs text-cyan-400 font-bold mb-1"><i class="fa-solid fa-tag mr-1"></i> Preço Versão Pro (R$)</label>
+              <input type="number" step="0.01" min="1" id="game-price" value="19.90" class="w-full px-3 py-2 rounded-xl bg-[#0d0a1c] border border-vortex-border text-xs text-white focus:border-cyan-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs text-cyan-400 font-bold mb-1"><i class="fa-brands fa-pix mr-1"></i> Chave PIX Recebimento</label>
+              <input type="text" id="game-pix-key" value="raullygomesbarbosa2@gmail.com" class="w-full px-3 py-2 rounded-xl bg-[#0d0a1c] border border-vortex-border text-xs text-white focus:border-cyan-500 focus:outline-none" />
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs text-cyan-400 font-bold"><i class="fa-solid fa-gem mr-1"></i> Link Download Versão Pro</label>
+              <button type="button" data-test-url="game-paid-url" class="px-2.5 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-[11px] font-bold transition cursor-pointer">
+                Testar Link
+              </button>
+            </div>
+            <input type="text" id="game-paid-url" placeholder="https://drive.google.com/file/d/..." class="w-full px-3 py-2 rounded-xl bg-[#0d0a1c] border border-vortex-border text-xs text-white focus:border-cyan-500 focus:outline-none" />
+          </div>
+        </div>
+
+        <button type="submit" class="w-full py-3.5 rounded-xl vortex-gradient text-white font-extrabold text-sm shadow-lg neon-glow-purple transition active:scale-95 cursor-pointer">
+          <i class="fa-solid fa-rocket mr-1"></i> Salvar &amp; Publicar na Loja
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 7: CONFIGURAR LINK DO APK OFICIAL (EXCLUSIVO ADMIN)             -->
+  <!-- ===================================================================== -->
+  <div id="apk-config-modal" class="vortex-modal hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-vortex-card border border-cyan-500/40 rounded-3xl max-w-md w-full p-6 shadow-2xl my-auto">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="font-gamer font-bold text-white text-base">Link Real do APK Oficial</h3>
+          <p class="text-[11px] text-cyan-300">Exclusivo: gomesbarbosaraully@gmail.com</p>
+        </div>
+        <button type="button" data-close-modal="apk-config-modal" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-gray-200 flex items-center justify-center cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-200 mb-3">
+        Cole aqui o link público do seu arquivo <strong>.apk</strong> hospedado no MediaFire, GitHub Releases ou Google Drive (marcado como público).
+      </div>
+
+      <form id="apk-config-form" class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Versão</label>
+            <input type="text" id="cfg-apk-version" value="v1.0.0" required class="w-full px-3 py-2 rounded-xl bg-[#0d0a1c] border border-vortex-border text-sm text-white" />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Tamanho</label>
+            <input type="text" id="cfg-apk-size" value="18.4 MB" required class="w-full px-3 py-2 rounded-xl bg-[#0d0a1c] border border-vortex-border text-sm text-white" />
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs text-gray-400">Link Real do APK Grátis</label>
+            <button type="button" data-test-url="cfg-apk-free-url" class="text-[11px] text-emerald-400 hover:underline font-bold cursor-pointer">Testar Link</button>
+          </div>
+          <input type="text" id="cfg-apk-free-url" placeholder="https://www.mediafire.com/file/.../ByteVortex.apk" class="w-full px-3 py-2 rounded-xl bg-[#0d0a1c] border border-vortex-border text-sm text-white" />
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Preço APK VIP (R$)</label>
+            <input type="number" step="0.01" id="cfg-apk-price" value="14.90" class="w-full px-3 py-2 rounded-xl bg-[#0d0a1c] border border-vortex-border text-sm text-white" />
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs text-gray-400">Link APK VIP</label>
+              <button type="button" data-test-url="cfg-apk-vip-url" class="text-[11px] text-cyan-400 hover:underline font-bold cursor-pointer">Testar Link</button>
+            </div>
+            <input type="text" id="cfg-apk-vip-url" placeholder="https://..." class="w-full px-3 py-2 rounded-xl bg-[#0d0a1c] border border-vortex-border text-sm text-white" />
+          </div>
+        </div>
+        <button type="submit" class="w-full py-3.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-gray-950 font-extrabold text-sm transition cursor-pointer">
+          Salvar Link do APK Oficial
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 8: ALTERAR / RESTAURAR PAPEL DE PAREDE DA LOJA (EXCLUSIVO ADMIN)-->
+  <!-- ===================================================================== -->
+  <div id="wallpaper-config-modal" class="vortex-modal hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-vortex-card border border-amber-400/50 rounded-3xl max-w-md w-full p-6 shadow-2xl my-auto">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300">
+            <i class="fa-solid fa-panorama"></i>
+          </div>
+          <div>
+            <h3 class="font-gamer font-bold text-white text-base">Papel de Parede da Loja</h3>
+            <p class="text-[11px] text-amber-300">Exclusivo: gomesbarbosaraully@gmail.com</p>
+          </div>
+        </div>
+        <button type="button" data-close-modal="wallpaper-config-modal" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-gray-200 flex items-center justify-center cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-gray-300 mb-4 leading-relaxed">
+        A arte oficial <strong>Byte Vortex (122273.png)</strong> está definida como padrão. Caso queira trocar o fundo no futuro, escolha uma imagem da galeria do celular ou cole um link abaixo.
+      </p>
+
+      <div class="space-y-3">
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs text-gray-300 font-semibold">Imagem de Fundo (Galeria ou URL)</label>
+            <label class="cursor-pointer text-[11px] text-amber-300 hover:underline font-bold">
+              <i class="fa-solid fa-image mr-1"></i>Escolher da Galeria
+              <input type="file" id="wallpaper-file-input" accept="image/*" class="hidden" />
+            </label>
+          </div>
+          <input type="text" id="wallpaper-url-input" placeholder="122273.png ou https://..." class="w-full px-3.5 py-2.5 rounded-xl bg-[#0d0a1c] border border-vortex-border text-sm text-white focus:border-amber-400 focus:outline-none" />
+        </div>
+
+        <button type="button" data-action="save-wallpaper" class="w-full py-3.5 rounded-xl vortex-gradient text-white font-extrabold text-sm shadow-lg transition cursor-pointer">
+          <i class="fa-solid fa-check mr-1"></i> Aplicar Papel de Parede
+        </button>
+
+        <button type="button" data-action="restore-default-wallpaper" class="w-full py-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 font-bold text-xs transition cursor-pointer">
+          <i class="fa-solid fa-rotate-left mr-1"></i> Restaurar Arte Oficial Padrão (122273.png)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- CAMADA DE SINCRONIZAÇÃO PÚBLICA FIRESTORE (COM FALLBACK OFFLINE)       -->
+  <!-- ===================================================================== -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    async function initCloudSync() {
+      try {
+        if (typeof __firebase_config === "undefined" || !__firebase_config) return;
+        const firebaseConfig = JSON.parse(__firebase_config);
+        if (!firebaseConfig || !firebaseConfig.apiKey) return;
+
+        const appId = typeof __app_id !== "undefined" ? __app_id : "byte-vortex-store";
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        if (typeof __initial_auth_token !== "undefined" && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+
+        const user = auth.currentUser;
+        if (!user) return;
+
+        const gamesCol = collection(db, "artifacts", appId, "public", "data", "byte_vortex_games");
+        const apkDocRef = doc(db, "artifacts", appId, "public", "data", "byte_vortex_settings", "apk_config");
+
+        // Escuta em tempo real todos os emuladores publicados para todos os usuários
+        onSnapshot(
+          gamesCol,
+          (snapshot) => {
+            const cloudItems = [];
+            snapshot.forEach((docSnap) => {
+              cloudItems.push({ id: docSnap.id, ...docSnap.data() });
+            });
+            cloudItems.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            if (window.ByteVortexApp) {
+              window.ByteVortexApp.applyCloudGames(cloudItems);
+            }
+          },
+          (err) => {
+            console.warn("Modo local ativo (Firestore):", err.message);
+          }
+        );
+
+        // Escuta configuração global do APK Oficial
+        onSnapshot(
+          apkDocRef,
+          (docSnap) => {
+            if (docSnap.exists() && window.ByteVortexApp) {
+              window.ByteVortexApp.applyCloudApk(docSnap.data());
+            }
+          },
+          (err) => {
+            console.warn("APK config local ativo:", err.message);
+          }
+        );
+
+        // Expõe métodos de escrita na nuvem para o Admin
+        window.ByteVortexCloud = {
+          saveGame: async (item) => {
+            if (!auth.currentUser) return;
+            await setDoc(doc(gamesCol, item.id), item);
+          },
+          deleteGame: async (id) => {
+            if (!auth.currentUser) return;
+            await deleteDoc(doc(gamesCol, id));
+          },
+          saveApkConfig: async (cfg) => {
+            if (!auth.currentUser) return;
+            await setDoc(apkDocRef, cfg);
+          }
+        };
+
+        const statusText = document.getElementById("sync-status-text");
+        if (statusText) statusText.textContent = "Loja Pública Online • Catálogo Sincronizado";
+      } catch (e) {
+        console.warn("Operando com armazenamento local:", e.message);
+      }
+    }
+
+    initCloudSync();
+  </script>
+
+  <!-- ===================================================================== -->
+  <!-- MOTOR PRINCIPAL SÍNCRONO (CATÁLOGO INICIAL 100% VAZIO)                -->
+  <!-- ===================================================================== -->
+  <script>
+    (function () {
+      const OWNER_EMAIL = "gomesbarbosaraully@gmail.com";
+      const DEFAULT_PIX_KEY = "raullygomesbarbosa2@gmail.com";
+      const DEFAULT_WALLPAPER_URL = "122273.png";
+      const STORAGE_GAMES_KEY = "byte_vortex_clean_games_v3";
+      const STORAGE_APK_KEY = "byte_vortex_clean_apk_v3";
+      const STORAGE_ADMIN_KEY = "byte_vortex_clean_admin_v3";
+      const STORAGE_WALLPAPER_KEY = "byte_vortex_wallpaper_v1";
+
+      // Catálogo inicia 100% vazio (zero emuladores de exemplo)
+      let gamesList = [];
+      let apkConfig = {
+        version: "v1.0.0",
+        size: "18.4 MB",
+        freeUrl: "",
+        vipUrl: "",
+        vipPrice: 14.90
+      };
+      let storeWallpaper = DEFAULT_WALLPAPER_URL;
+      let isOwnerAdmin = false;
+      let selectedPlatform = "Todos";
+      let selectedPriceFilter = "all";
+      let currentDetailItem = null;
+      let currentCheckoutItem = null;
+      let unlockedPaidIds = new Set();
+      let deferredPwaPrompt = null;
+
+      function applyStoreWallpaper(url) {
+        const target = (url && url.trim()) ? url.trim() : DEFAULT_WALLPAPER_URL;
+        storeWallpaper = target;
+        const bgEl = document.getElementById("vortex-wallpaper-bg");
+        if (bgEl) {
+          bgEl.style.backgroundImage = "url('" + target.replace(/'/g, "\\'") + "')";
+        }
+        const headerLogo = document.getElementById("header-brand-logo");
+        const bannerLogo = document.getElementById("banner-brand-logo");
+        if (headerLogo) headerLogo.src = target;
+        if (bannerLogo) bannerLogo.src = target;
+      }
+
+      function loadLocalState() {
+        try {
+          const savedGames = localStorage.getItem(STORAGE_GAMES_KEY);
+          const parsed = savedGames ? JSON.parse(savedGames) : [];
+          gamesList = Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+          gamesList = [];
+        }
+
+        try {
+          const savedApk = localStorage.getItem(STORAGE_APK_KEY);
+          if (savedApk) {
+            apkConfig = { ...apkConfig, ...JSON.parse(savedApk) };
+          }
+        } catch (e) {}
+
+        try {
+          const savedWall = localStorage.getItem(STORAGE_WALLPAPER_KEY);
+          if (savedWall) {
+            storeWallpaper = savedWall;
+          }
+        } catch (e) {}
+
+        try {
+          isOwnerAdmin = localStorage.getItem(STORAGE_ADMIN_KEY) === OWNER_EMAIL;
+        } catch (e) {
+          isOwnerAdmin = false;
+        }
+      }
+
+      function persistLocalGames() {
+        try {
+          localStorage.setItem(STORAGE_GAMES_KEY, JSON.stringify(gamesList));
+        } catch (e) {
+          showToast("Aviso: imagem muito pesada para o armazenamento local.", "error");
+        }
+      }
+
+      function persistLocalApk() {
+        try {
+          localStorage.setItem(STORAGE_APK_KEY, JSON.stringify(apkConfig));
+        } catch (e) {}
+      }
+
+      function normalizeExternalUrl(rawUrl) {
+        if (!rawUrl || typeof rawUrl !== "string") return "";
+        const trimmed = rawUrl.trim();
+        if (!trimmed || trimmed.startsWith("#") || trimmed.startsWith("javascript:")) return "";
+        if (/^https?:\/\//i.test(trimmed)) return trimmed;
+        if (/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(trimmed)) {
+          return "https://" + trimmed;
+        }
+        return "";
+      }
+
+      function formatBRL(val) {
+        return Number(val || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      }
+
+      function escapeHtml(str) {
+        return String(str || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function showToast(message, type) {
+        const container = document.getElementById("toast-container");
+        if (!container) return;
+        const toast = document.createElement("div");
+        const styles = {
+          success: "bg-emerald-950/95 border-emerald-500 text-emerald-200",
+          error: "bg-red-950/95 border-red-500 text-red-200",
+          info: "bg-purple-950/95 border-purple-500 text-purple-200"
+        };
+        const icons = {
+          success: "fa-circle-check text-emerald-400",
+          error: "fa-circle-exclamation text-red-400",
+          info: "fa-bolt text-purple-400"
+        };
+        toast.className = "pointer-events-auto px-4 py-3 rounded-2xl border shadow-2xl text-xs font-semibold flex items-center gap-2.5 transition-all duration-300 " + (styles[type] || styles.info);
+        toast.innerHTML = '<i class="fa-solid ' + (icons[type] || icons.info) + '"></i><span>' + escapeHtml(message) + "</span>";
+        container.appendChild(toast);
+        setTimeout(() => {
+          toast.style.opacity = "0";
+          setTimeout(() => toast.remove(), 300);
+        }, 3200);
+      }
+
+      function openModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove("hidden");
+      }
+
+      function closeModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.add("hidden");
+      }
+
+      // Download seguro sem erro 404
+      function executeSafeDownload(label, rawUrl, meta) {
+        const validUrl = normalizeExternalUrl(rawUrl);
+        if (validUrl) {
+          showToast("Abrindo link oficial de download: " + label, "success");
+          window.open(validUrl, "_blank", "noopener,noreferrer");
+          return;
+        }
+
+        showToast("Baixando informativo do pacote: " + label, "info");
+        const content = [
+          "=======================================================",
+          "         BYTE VORTEX - LOJA DE EMULADORES & JOGOS      ",
+          "=======================================================",
+          "Item: " + label,
+          "Plataforma: " + ((meta && meta.platform) || "Android / Multiplataforma"),
+          "Tamanho: " + ((meta && meta.size) || "N/A"),
+          "Data: " + new Date().toLocaleString("pt-BR"),
+          "-------------------------------------------------------",
+          "OBSERVAÇÃO:",
+          "O administrador ainda não vinculou um link externo direto para este pacote.",
+          "Para instalar a loja como Web App (PWA) no seu celular:",
+          "1. Abra a Byte Vortex no Google Chrome.",
+          "2. Toque nos 3 pontinhos (menu) no canto superior direito.",
+          "3. Selecione 'Adicionar a tela inicial' ou 'Instalar aplicativo'.",
+          "======================================================="
+        ].join("\n");
+
+        const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = label.replace(/[^a-zA-Z0-9._-]/g, "_") + ".txt";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+      }
+
+      function syncAdminUI() {
+        const headerBtn = document.getElementById("header-admin-btn");
+        const welcomeBar = document.getElementById("admin-welcome-bar");
+        const fabBtn = document.getElementById("fab-admin-upload");
+        const authLabel = document.getElementById("auth-label");
+        const authIcon = document.getElementById("auth-icon");
+        const loggedView = document.getElementById("auth-admin-logged-view");
+        const formView = document.getElementById("auth-login-form-view");
+        const emptyAdminBtn = document.getElementById("empty-admin-post-btn");
+
+        if (isOwnerAdmin) {
+          headerBtn.classList.remove("hidden");
+          headerBtn.classList.add("flex");
+          welcomeBar.classList.remove("hidden");
+          fabBtn.classList.remove("hidden");
+          fabBtn.classList.add("flex");
+          emptyAdminBtn.classList.remove("hidden");
+          authLabel.textContent = "Admin • Dono";
+          authIcon.className = "fa-solid fa-crown text-amber-400";
+          loggedView.classList.remove("hidden");
+          formView.classList.add("hidden");
+        } else {
+          headerBtn.classList.add("hidden");
+          headerBtn.classList.remove("flex");
+          welcomeBar.classList.add("hidden");
+          fabBtn.classList.add("hidden");
+          fabBtn.classList.remove("flex");
+          emptyAdminBtn.classList.add("hidden");
+          authLabel.textContent = "Visitante";
+          authIcon.className = "fa-solid fa-user-astronaut text-purple-400";
+          loggedView.classList.add("hidden");
+          formView.classList.remove("hidden");
+        }
+      }
+
+      function syncApkUI() {
+        document.getElementById("banner-apk-version").textContent = apkConfig.version;
+        document.getElementById("modal-apk-version").textContent = apkConfig.version;
+        document.getElementById("modal-apk-size").textContent = apkConfig.size;
+        document.getElementById("modal-apk-price").textContent = formatBRL(apkConfig.vipPrice);
+      }
+
+      function renderPlatformTabs() {
+        const platforms = ["Todos", "PS2", "PSP", "PS1", "Dreamcast", "SNES", "N64", "GBA", "Arcade", "Android"];
+        const container = document.getElementById("platform-tabs");
+        container.innerHTML = platforms
+          .map((plat) => {
+            const active = selectedPlatform === plat;
+            return (
+              '<button type="button" data-platform="' +
+              plat +
+              '" class="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ' +
+              (active
+                ? "vortex-gradient text-white shadow-md neon-glow-purple"
+                : "vortex-glass-card border border-vortex-border text-gray-200 hover:border-purple-500/40") +
+              '">' +
+              plat +
+              "</button>"
+            );
+          })
+          .join("");
+      }
+
+      function renderCatalog() {
+        const query = (document.getElementById("search-input").value || "").toLowerCase().trim();
+        const grid = document.getElementById("catalog-grid");
+        const emptyState = document.getElementById("empty-state");
+        const emptyTitle = document.getElementById("empty-state-title");
+        const emptyDesc = document.getElementById("empty-state-desc");
+        const emptyResetBtn = document.getElementById("empty-reset-btn");
+
+        const filtered = gamesList.filter((item) => {
+          const matchText =
+            (item.title || "").toLowerCase().includes(query) ||
+            (item.platform || "").toLowerCase().includes(query) ||
+            (item.desc || "").toLowerCase().includes(query);
+
+          const matchPlat = selectedPlatform === "Todos" || item.platform === selectedPlatform;
+
+          let matchPrice = true;
+          if (selectedPriceFilter === "free") {
+            matchPrice = item.offerType === "free" || item.offerType === "both";
+          } else if (selectedPriceFilter === "paid") {
+            matchPrice = item.offerType === "paid" || item.offerType === "both";
+          }
+
+          return matchText && matchPlat && matchPrice;
+        });
+
+        if (filtered.length === 0) {
+          grid.innerHTML = "";
+          emptyState.classList.remove("hidden");
+
+          if (gamesList.length === 0) {
+            emptyTitle.textContent = "Nenhum emulador publicado ainda";
+            emptyDesc.textContent = isOwnerAdmin
+              ? "Seu catálogo está limpo! Toque no botão abaixo para publicar o primeiro emulador ou jogo da Byte Vortex."
+              : "O catálogo da Byte Vortex está pronto! Assim que o administrador publicar os emuladores e jogos, eles aparecerão aqui.";
+            emptyResetBtn.classList.add("hidden");
+          } else {
+            emptyTitle.textContent = "Nenhum resultado encontrado";
+            emptyDesc.textContent = "Nenhum emulador corresponde aos filtros ou à busca atual.";
+            emptyResetBtn.classList.remove("hidden");
+          }
+          return;
+        }
+
+        emptyState.classList.add("hidden");
+        grid.innerHTML = filtered
+          .map((item) => {
+            let badge = "";
+            if (item.offerType === "both") {
+              badge = '<span class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500 text-gray-950 font-extrabold text-[10px] uppercase">Grátis + Pro</span>';
+            } else if (item.offerType === "free") {
+              badge = '<span class="px-2.5 py-1 rounded-lg bg-emerald-500 text-gray-950 font-extrabold text-[10px] uppercase">100% Grátis</span>';
+            } else {
+              badge = '<span class="px-2.5 py-1 rounded-lg bg-cyan-500 text-gray-950 font-extrabold text-[10px] uppercase">' + formatBRL(item.price) + "</span>";
+            }
+
+            const fallbackImg = "https://placehold.co/600x360/1e1b4b/a78bfa?text=" + encodeURIComponent(item.title);
+            const coverSrc = item.cover || fallbackImg;
+
+            return (
+              '<article class="group vortex-glass-card border border-purple-500/35 hover:border-amber-400/70 rounded-2xl overflow-hidden flex flex-col justify-between transition duration-200 shadow-xl">' +
+              '<div>' +
+              '<div data-open-game="' + escapeHtml(item.id) + '" class="relative h-44 bg-gray-900 overflow-hidden cursor-pointer">' +
+              '<img src="' + escapeHtml(coverSrc) + '" alt="' + escapeHtml(item.title) + '" class="w-full h-full object-cover" onerror="this.src=\'' + fallbackImg + '\'" />' +
+              '<div class="absolute inset-0 bg-gradient-to-t from-vortex-card via-transparent to-black/30 pointer-events-none"></div>' +
+              '<span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-black/75 border border-white/10 text-purple-300 font-bold text-[11px]">' + escapeHtml(item.platform) + "</span>" +
+              '<div class="absolute top-3 right-3">' + badge + "</div>" +
+              '<span class="absolute bottom-2.5 right-3 text-[11px] text-gray-200 bg-black/70 px-2 py-0.5 rounded-md">' + escapeHtml(item.size || "N/A") + "</span>" +
+              "</div>" +
+              '<div class="p-4">' +
+              '<h3 data-open-game="' + escapeHtml(item.id) + '" class="font-gamer font-bold text-base text-white hover:text-cyan-300 transition cursor-pointer line-clamp-1">' + escapeHtml(item.title) + "</h3>" +
+              '<p class="text-xs text-gray-400 mt-1.5 line-clamp-2 leading-relaxed">' + escapeHtml(item.desc) + "</p>" +
+              "</div>" +
+              "</div>" +
+              '<div class="px-4 pb-4 pt-1 flex flex-col gap-2">' +
+              '<button type="button" data-open-game="' + escapeHtml(item.id) + '" class="w-full py-2.5 px-3 rounded-xl bg-white/10 hover:bg-purple-600 text-white font-bold text-xs border border-white/10 transition flex items-center justify-center gap-2 active:scale-95 cursor-pointer">' +
+              '<i class="fa-solid fa-download"></i>' +
+              "<span>" + (item.offerType === "paid" ? "Comprar Versão Pro (" + formatBRL(item.price) + ")" : "Baixar / Ver Opções") + "</span>" +
+              "</button>" +
+              (isOwnerAdmin
+                ? '<div class="flex items-center gap-2 pt-1">' +
+                  '<button type="button" data-edit-game="' + escapeHtml(item.id) + '" class="flex-1 py-2 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-[11px] font-bold transition cursor-pointer"><i class="fa-solid fa-pen mr-1"></i> Editar</button>' +
+                  '<button type="button" data-delete-game="' + escapeHtml(item.id) + '" class="flex-1 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 text-[11px] font-bold transition cursor-pointer"><i class="fa-solid fa-trash mr-1"></i> Excluir</button>' +
+                  "</div>"
+                : "") +
+              "</div>" +
+              "</article>"
+            );
+          })
+          .join("");
+      }
+
+      function openGameDetail(id) {
+        const item = gamesList.find((g) => g.id === id);
+        if (!item) return;
+        currentDetailItem = item;
+
+        const fallbackImg = "https://placehold.co/800x450/1e1b4b/a78bfa?text=" + encodeURIComponent(item.title);
+        const imgEl = document.getElementById("detail-img");
+        imgEl.onerror = () => { imgEl.src = fallbackImg; };
+        imgEl.src = item.cover || fallbackImg;
+
+        document.getElementById("detail-platform").textContent = item.platform;
+        document.getElementById("detail-title").textContent = item.title;
+        document.getElementById("detail-size").innerHTML = '<i class="fa-solid fa-hard-drive mr-1 text-cyan-400"></i> ' + escapeHtml(item.size || "N/A");
+        document.getElementById("detail-desc").textContent = item.desc;
+
+        const freeBox = document.getElementById("detail-free-box");
+        const paidBox = document.getElementById("detail-paid-box");
+        const paidBtn = document.getElementById("detail-paid-btn");
+
+        freeBox.classList.toggle("hidden", item.offerType === "paid");
+        paidBox.classList.toggle("hidden", item.offerType === "free");
+
+        if (item.offerType === "paid" || item.offerType === "both") {
+          document.getElementById("detail-price-tag").textContent = formatBRL(item.price);
+          if (unlockedPaidIds.has(item.id)) {
+            paidBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Baixar Versão Pro Liberada';
+            paidBtn.className = "w-full py-3 px-4 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-gray-950 font-extrabold text-sm transition flex items-center justify-center gap-2 active:scale-95 cursor-pointer";
+          } else {
+            paidBtn.innerHTML = '<i class="fa-solid fa-cart-shopping"></i> Comprar Versão Pro (' + formatBRL(item.price) + ")";
+            paidBtn.className = "w-full py-3 px-4 rounded-xl vortex-gradient hover:opacity-95 text-white font-extrabold text-sm shadow-lg neon-glow-purple transition flex items-center justify-center gap-2 active:scale-95 cursor-pointer";
+          }
+        }
+
+        const adminControls = document.getElementById("detail-admin-controls");
+        adminControls.classList.toggle("hidden", !isOwnerAdmin);
+
+        openModal("game-detail-modal");
+      }
+
+      function startCheckout(item) {
+        currentCheckoutItem = item;
+        document.getElementById("checkout-item-name").textContent = item.title;
+        document.getElementById("checkout-item-price").textContent = formatBRL(item.price);
+        const pixTarget = (item.pixKey && item.pixKey !== OWNER_EMAIL) ? item.pixKey : DEFAULT_PIX_KEY;
+        document.getElementById("pix-code-input").value = pixTarget;
+        closeModal("game-detail-modal");
+        openModal("checkout-modal");
+      }
+
+      function openAdminUploadModal(editId) {
+        if (!isOwnerAdmin) {
+          showToast("Acesso restrito ao dono da loja.", "error");
+          return;
+        }
+        const form = document.getElementById("admin-game-form");
+        form.reset();
+        document.getElementById("edit-game-id").value = "";
+        document.getElementById("game-pix-key").value = DEFAULT_PIX_KEY;
+
+        if (editId) {
+          const item = gamesList.find((g) => g.id === editId);
+          if (item) {
+            document.getElementById("admin-modal-heading").textContent = "Editar Publicação";
+            document.getElementById("edit-game-id").value = item.id;
+            document.getElementById("game-title").value = item.title;
+            document.getElementById("game-platform").value = item.platform;
+            document.getElementById("game-cover").value = item.cover || "";
+            document.getElementById("game-size").value = item.size || "";
+            document.getElementById("game-desc").value = item.desc || "";
+            document.getElementById("game-offer-type").value = item.offerType || "both";
+            document.getElementById("game-free-url").value = item.freeUrl || "";
+            document.getElementById("game-price").value = item.price || 19.90;
+            document.getElementById("game-pix-key").value = (item.pixKey && item.pixKey !== OWNER_EMAIL) ? item.pixKey : DEFAULT_PIX_KEY;
+            document.getElementById("game-paid-url").value = item.paidUrl || "";
+          }
+        } else {
+          document.getElementById("admin-modal-heading").textContent = "Publicar Emulador / Jogo";
+        }
+
+        updateOfferFieldsVisibility();
+        openModal("admin-upload-modal");
+      }
+
+      function updateOfferFieldsVisibility() {
+        const type = document.getElementById("game-offer-type").value;
+        document.getElementById("field-free-group").classList.toggle("hidden", type === "paid");
+        document.getElementById("field-paid-group").classList.toggle("hidden", type === "free");
+      }
+
+      async function removeGameById(id) {
+        gamesList = gamesList.filter((g) => g.id !== id);
+        persistLocalGames();
+        renderCatalog();
+        if (window.ByteVortexCloud) {
+          try {
+            await window.ByteVortexCloud.deleteGame(id);
+          } catch (e) {}
+        }
+        showToast("Item removido da loja.", "info");
+      }
+
+      // Delegação Global de Cliques
+      document.addEventListener("click", function (e) {
+        if (e.target.classList.contains("vortex-modal")) {
+          e.target.classList.add("hidden");
+          return;
+        }
+
+        const closeBtn = e.target.closest("[data-close-modal]");
+        if (closeBtn) {
+          closeModal(closeBtn.getAttribute("data-close-modal"));
+          return;
+        }
+
+        const actionBtn = e.target.closest("[data-action]");
+        if (actionBtn) {
+          const action = actionBtn.getAttribute("data-action");
+          if (action === "reset-filters") {
+            document.getElementById("search-input").value = "";
+            selectedPlatform = "Todos";
+            selectedPriceFilter = "all";
+            document.querySelectorAll(".price-filter-btn").forEach((b) => {
+              b.className =
+                b.getAttribute("data-price-filter") === "all"
+                  ? "price-filter-btn px-4 py-2.5 rounded-xl text-xs font-bold bg-purple-600 text-white whitespace-nowrap transition cursor-pointer shadow"
+                  : "price-filter-btn px-4 py-2.5 rounded-xl text-xs font-bold vortex-glass-card border border-vortex-border text-gray-200 hover:border-purple-500/50 whitespace-nowrap transition cursor-pointer";
+            });
+            renderPlatformTabs();
+            renderCatalog();
+          } else if (action === "open-apk") {
+            openModal("apk-modal");
+          } else if (action === "open-pwa") {
+            document.getElementById("pwa-share-url").value = window.location.href;
+            openModal("pwa-guide-modal");
+          } else if (action === "switch-apk-to-pwa") {
+            closeModal("apk-modal");
+            document.getElementById("pwa-share-url").value = window.location.href;
+            openModal("pwa-guide-modal");
+          } else if (action === "open-auth") {
+            openModal("auth-modal");
+          } else if (action === "logout-admin") {
+            isOwnerAdmin = false;
+            localStorage.removeItem(STORAGE_ADMIN_KEY);
+            syncAdminUI();
+            renderCatalog();
+            closeModal("auth-modal");
+            showToast("Você saiu do modo administrador.", "info");
+          } else if (action === "open-admin-upload") {
+            openAdminUploadModal(null);
+          } else if (action === "open-wallpaper-config") {
+            if (!isOwnerAdmin) return;
+            document.getElementById("wallpaper-url-input").value = storeWallpaper;
+            openModal("wallpaper-config-modal");
+          } else if (action === "save-wallpaper") {
+            if (!isOwnerAdmin) return;
+            const newWall = document.getElementById("wallpaper-url-input").value.trim() || DEFAULT_WALLPAPER_URL;
+            try {
+              localStorage.setItem(STORAGE_WALLPAPER_KEY, newWall);
+            } catch (err) {
+              showToast("Imagem muito pesada para salvar offline, aplicada na sessão.", "info");
+            }
+            applyStoreWallpaper(newWall);
+            closeModal("wallpaper-config-modal");
+            showToast("Papel de parede da loja atualizado!", "success");
+          } else if (action === "restore-default-wallpaper") {
+            if (!isOwnerAdmin) return;
+            localStorage.removeItem(STORAGE_WALLPAPER_KEY);
+            applyStoreWallpaper(DEFAULT_WALLPAPER_URL);
+            document.getElementById("wallpaper-url-input").value = DEFAULT_WALLPAPER_URL;
+            closeModal("wallpaper-config-modal");
+            showToast("Arte oficial padrão (122273.png) restaurada!", "success");
+          } else if (action === "open-apk-config") {
+            if (!isOwnerAdmin) return;
+            document.getElementById("cfg-apk-version").value = apkConfig.version;
+            document.getElementById("cfg-apk-size").value = apkConfig.size;
+            document.getElementById("cfg-apk-free-url").value = apkConfig.freeUrl;
+            document.getElementById("cfg-apk-price").value = apkConfig.vipPrice;
+            document.getElementById("cfg-apk-vip-url").value = apkConfig.vipUrl;
+            openModal("apk-config-modal");
+          } else if (action === "copy-pix") {
+            const input = document.getElementById("pix-code-input");
+            input.select();
+            document.execCommand("copy");
+            showToast("Chave PIX (" + input.value + ") copiada!", "success");
+          } else if (action === "copy-store-link") {
+            const input = document.getElementById("pwa-share-url");
+            input.select();
+            document.execCommand("copy");
+            showToast("Link da Byte Vortex copiado!", "success");
+          } else if (action === "confirm-payment") {
+            if (!currentCheckoutItem) return;
+            unlockedPaidIds.add(currentCheckoutItem.id);
+            closeModal("checkout-modal");
+            showToast("Pagamento confirmado! Liberando download...", "success");
+            if (currentCheckoutItem.id === "official-apk-vip") {
+              executeSafeDownload("ByteVortex_" + apkConfig.version + "_VIP_APK", apkConfig.vipUrl, {
+                platform: "Android APK VIP",
+                size: apkConfig.size
+              });
+            } else {
+              executeSafeDownload(currentCheckoutItem.title + "_Pro", currentCheckoutItem.paidUrl, currentCheckoutItem);
+              openGameDetail(currentCheckoutItem.id);
+            }
+          } else if (action === "native-pwa-install" && deferredPwaPrompt) {
+            deferredPwaPrompt.prompt();
+            deferredPwaPrompt = null;
+            closeModal("pwa-guide-modal");
+          }
+          return;
+        }
+
+        const platBtn = e.target.closest("[data-platform]");
+        if (platBtn) {
+          selectedPlatform = platBtn.getAttribute("data-platform");
+          renderPlatformTabs();
+          renderCatalog();
+          return;
+        }
+
+        const priceBtn = e.target.closest("[data-price-filter]");
+        if (priceBtn) {
+          selectedPriceFilter = priceBtn.getAttribute("data-price-filter");
+          document.querySelectorAll(".price-filter-btn").forEach((b) => {
+            b.className =
+              b.getAttribute("data-price-filter") === selectedPriceFilter
+                ? "price-filter-btn px-4 py-2.5 rounded-xl text-xs font-bold bg-purple-600 text-white whitespace-nowrap transition cursor-pointer shadow"
+                : "price-filter-btn px-4 py-2.5 rounded-xl text-xs font-bold vortex-glass-card border border-vortex-border text-gray-200 hover:border-purple-500/50 whitespace-nowrap transition cursor-pointer";
+          });
+          renderCatalog();
+          return;
+        }
+
+        const openGameEl = e.target.closest("[data-open-game]");
+        if (openGameEl) {
+          openGameDetail(openGameEl.getAttribute("data-open-game"));
+          return;
+        }
+
+        const editBtn = e.target.closest("[data-edit-game]");
+        if (editBtn) {
+          openAdminUploadModal(editBtn.getAttribute("data-edit-game"));
+          return;
+        }
+
+        const delBtn = e.target.closest("[data-delete-game]");
+        if (delBtn) {
+          removeGameById(delBtn.getAttribute("data-delete-game"));
+          return;
+        }
+
+        const apkBtn = e.target.closest("[data-download-apk]");
+        if (apkBtn) {
+          const tier = apkBtn.getAttribute("data-download-apk");
+          closeModal("apk-modal");
+          if (tier === "free") {
+            executeSafeDownload("ByteVortex_" + apkConfig.version + "_Oficial", apkConfig.freeUrl, {
+              platform: "Android APK / PWA",
+              size: apkConfig.size
+            });
+          } else {
+            startCheckout({
+              id: "official-apk-vip",
+              title: "App Byte Vortex APK VIP (" + apkConfig.version + ")",
+              price: apkConfig.vipPrice,
+              paidUrl: apkConfig.vipUrl,
+              pixKey: DEFAULT_PIX_KEY
+            });
+          }
+          return;
+        }
+
+        const payTab = e.target.closest("[data-pay-tab]");
+        if (payTab) {
+          const mode = payTab.getAttribute("data-pay-tab");
+          document.getElementById("payment-pix-view").classList.toggle("hidden", mode !== "pix");
+          document.getElementById("payment-card-view").classList.toggle("hidden", mode !== "card");
+          document.getElementById("tab-pix").className =
+            mode === "pix"
+              ? "py-2.5 rounded-lg bg-purple-600 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+              : "py-2.5 rounded-lg text-gray-400 hover:text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer";
+          document.getElementById("tab-card").className =
+            mode === "card"
+              ? "py-2.5 rounded-lg bg-purple-600 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+              : "py-2.5 rounded-lg text-gray-400 hover:text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer";
+          return;
+        }
+
+        const testUrlBtn = e.target.closest("[data-test-url]");
+        if (testUrlBtn) {
+          const input = document.getElementById(testUrlBtn.getAttribute("data-test-url"));
+          const valid = normalizeExternalUrl(input.value);
+          if (!valid) {
+            showToast("Cole um link válido primeiro (ex: https://mediafire.com/...)", "error");
+            return;
+          }
+          input.value = valid;
+          window.open(valid, "_blank", "noopener,noreferrer");
+          return;
+        }
+      });
+
+      document.getElementById("detail-free-btn").addEventListener("click", function () {
+        if (!currentDetailItem) return;
+        executeSafeDownload(currentDetailItem.title + "_Gratis", currentDetailItem.freeUrl, currentDetailItem);
+      });
+
+      document.getElementById("detail-paid-btn").addEventListener("click", function () {
+        if (!currentDetailItem) return;
+        if (unlockedPaidIds.has(currentDetailItem.id)) {
+          executeSafeDownload(currentDetailItem.title + "_Pro", currentDetailItem.paidUrl, currentDetailItem);
+        } else {
+          startCheckout(currentDetailItem);
+        }
+      });
+
+      document.getElementById("detail-edit-btn").addEventListener("click", function () {
+        if (!currentDetailItem) return;
+        closeModal("game-detail-modal");
+        openAdminUploadModal(currentDetailItem.id);
+      });
+
+      document.getElementById("detail-delete-btn").addEventListener("click", function () {
+        if (!currentDetailItem) return;
+        const id = currentDetailItem.id;
+        closeModal("game-detail-modal");
+        removeGameById(id);
+      });
+
+      document.getElementById("search-input").addEventListener("input", renderCatalog);
+      document.getElementById("game-offer-type").addEventListener("change", updateOfferFieldsVisibility);
+
+      // Upload de imagem da galeria do celular comprimida em base64
+      document.getElementById("game-cover-file").addEventListener("change", function (e) {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (ev) {
+          const img = new Image();
+          img.onload = function () {
+            const canvas = document.createElement("canvas");
+            const scale = Math.min(1, 560 / img.width);
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+            document.getElementById("game-cover").value = canvas.toDataURL("image/jpeg", 0.78);
+            showToast("Imagem de capa carregada!", "success");
+          };
+          img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+
+      // Upload de papel de parede da galeria do celular
+      document.getElementById("wallpaper-file-input").addEventListener("change", function (e) {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (ev) {
+          const img = new Image();
+          img.onload = function () {
+            const canvas = document.createElement("canvas");
+            const scale = Math.min(1, 1080 / img.width);
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+            document.getElementById("wallpaper-url-input").value = canvas.toDataURL("image/jpeg", 0.82);
+            showToast("Imagem carregada! Toque em Aplicar Papel de Parede.", "success");
+          };
+          img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+
+      // Login Admin Exclusivo (gomesbarbosaraully@gmail.com)
+      document.getElementById("admin-login-form").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const email = (document.getElementById("admin-email-input").value || "").trim().toLowerCase();
+        const pass = (document.getElementById("admin-pass-input").value || "").trim();
+
+        if (email !== OWNER_EMAIL) {
+          showToast("Acesso negado! Apenas o dono autorizado pode entrar.", "error");
+          return;
+        }
+        if (pass.length < 4) {
+          showToast("Digite uma senha com pelo menos 4 caracteres.", "error");
+          return;
+        }
+
+        isOwnerAdmin = true;
+        localStorage.setItem(STORAGE_ADMIN_KEY, OWNER_EMAIL);
+        syncAdminUI();
+        renderCatalog();
+        closeModal("auth-modal");
+        showToast("Bem-vindo, Dono! Painel Byte Vortex desbloqueado.", "success");
+      });
+
+      // Publicar / Editar Jogo ou Emulador
+      document.getElementById("admin-game-form").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        if (!isOwnerAdmin) return;
+
+        const editId = document.getElementById("edit-game-id").value;
+        const existing = editId ? gamesList.find((g) => g.id === editId) : null;
+
+        const payload = {
+          id: editId || "bv-" + Date.now(),
+          title: document.getElementById("game-title").value.trim(),
+          platform: document.getElementById("game-platform").value,
+          cover: document.getElementById("game-cover").value.trim(),
+          size: document.getElementById("game-size").value.trim(),
+          desc: document.getElementById("game-desc").value.trim(),
+          offerType: document.getElementById("game-offer-type").value,
+          freeUrl: normalizeExternalUrl(document.getElementById("game-free-url").value),
+          price: parseFloat(document.getElementById("game-price").value) || 0,
+          pixKey: document.getElementById("game-pix-key").value.trim() || DEFAULT_PIX_KEY,
+          paidUrl: normalizeExternalUrl(document.getElementById("game-paid-url").value),
+          createdAt: existing ? existing.createdAt : Date.now()
+        };
+
+        if (editId) {
+          const idx = gamesList.findIndex((g) => g.id === editId);
+          if (idx > -1) gamesList[idx] = payload;
+        } else {
+          gamesList.unshift(payload);
+        }
+
+        persistLocalGames();
+        renderCatalog();
+        closeModal("admin-upload-modal");
+        showToast("Emulador publicado na Byte Vortex!", "success");
+
+        if (window.ByteVortexCloud) {
+          try {
+            await window.ByteVortexCloud.saveGame(payload);
+          } catch (err) {}
+        }
+      });
+
+      // Salvar Link Real do APK Oficial
+      document.getElementById("apk-config-form").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        if (!isOwnerAdmin) return;
+        apkConfig = {
+          version: document.getElementById("cfg-apk-version").value.trim() || "v1.0.0",
+          size: document.getElementById("cfg-apk-size").value.trim() || "18.4 MB",
+          freeUrl: normalizeExternalUrl(document.getElementById("cfg-apk-free-url").value),
+          vipPrice: parseFloat(document.getElementById("cfg-apk-price").value) || 14.90,
+          vipUrl: normalizeExternalUrl(document.getElementById("cfg-apk-vip-url").value)
+        };
+        persistLocalApk();
+        syncApkUI();
+        closeModal("apk-config-modal");
+        showToast("Link do APK Oficial atualizado!", "success");
+
+        if (window.ByteVortexCloud) {
+          try {
+            await window.ByteVortexCloud.saveApkConfig(apkConfig);
+          } catch (err) {}
+        }
+      });
+
+      window.addEventListener("beforeinstallprompt", function (e) {
+        e.preventDefault();
+        deferredPwaPrompt = e;
+        document.getElementById("pwa-native-install-btn").classList.remove("hidden");
+      });
+
+      // API de sincronização com a nuvem pública
+      window.ByteVortexApp = {
+        applyCloudGames: function (cloudItems) {
+          gamesList = Array.isArray(cloudItems) ? cloudItems : [];
+          persistLocalGames();
+          renderCatalog();
+        },
+        applyCloudApk: function (cloudApk) {
+          if (cloudApk && typeof cloudApk === "object") {
+            apkConfig = { ...apkConfig, ...cloudApk };
+            persistLocalApk();
+            syncApkUI();
+          }
+        }
+      };
+
+      // Inicialização limpa
+      loadLocalState();
+      applyStoreWallpaper(storeWallpaper);
+      syncAdminUI();
+      syncApkUI();
+      renderPlatformTabs();
+      renderCatalog();
+    })();
+  </script>
+
+  <script>
+  (function(){
+    var aviso=document.createElement('div');
+    aviso.style.cssText='position:relative;z-index:5;background:#331c50;color:#fff;padding:14px 18px;font:14px/1.5 sans-serif;text-align:center';
+    aviso.textContent='Catálogo público em preparação. Os itens salvos no seu celular não são publicados automaticamente. Pagamentos e área de administrador online ainda não estão disponíveis.';
+    document.body.insertBefore(aviso,document.body.firstChild);
+    document.addEventListener('click',function(e){
+      var target=e.target; while(target && target.nodeType===1 && !target.getAttribute('data-action') && !target.getAttribute('data-download-apk'))target=target.parentElement;
+      if(!target)return;
+      var action=target.getAttribute('data-action');
+      if(['open-auth','open-admin-upload','open-apk-config','open-apk','open-pwa'].indexOf(action)!==-1 || target.hasAttribute('data-download-apk')){
+        e.preventDefault();e.stopImmediatePropagation();alert('Esta função ainda não está disponível na loja pública.');
+      }
+    },true);
+    if(window.ByteVortexApp)window.ByteVortexApp.applyCloudGames([]);
+    fetch('./catalogo.json?atualizado='+Date.now(),{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('catálogo indisponível');return r.json()}).then(function(items){if(!Array.isArray(items))throw new Error('catálogo inválido');window.ByteVortexApp.applyCloudGames(items.filter(function(item){return item && item.offerType==='free' && /^https:\/\//i.test(item.freeUrl||'')}));}).catch(function(){aviso.textContent='Não foi possível carregar o catálogo público agora. Tente novamente mais tarde.'});
+  })();
+  </script>
+</body>
+</html>
