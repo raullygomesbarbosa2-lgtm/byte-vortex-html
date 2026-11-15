@@ -1,0 +1,55 @@
+name: APK Android 4.4 Lancamento
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - byte-vortex-html-release.zip
+      - .github/workflows/release-apk.yml
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Extrair projeto
+        run: unzip -q byte-vortex-html-release.zip
+      - name: Preparar JavaScript para Android 4.4
+        working-directory: byte-vortex-html/compat
+        run: npm install --no-audit --no-fund && npm run prepare:html
+      - name: Gerar chave temporaria e compilar APK release
+        shell: bash
+        run: |
+          export BV_KEYSTORE="$RUNNER_TEMP/bv-release.jks"
+          export BV_STORE_PASSWORD="$(openssl rand -hex 24)"
+          keytool -genkeypair -noprompt -keystore "$BV_KEYSTORE" -storetype JKS -storepass "$BV_STORE_PASSWORD" -keypass "$BV_STORE_PASSWORD" -alias bytevortex -keyalg RSA -keysize 2048 -validity 10000 -dname 'CN=Byte Vortex'
+          cd byte-vortex-html/android
+          gradle assembleRelease --stacktrace
+          rm -f "$BV_KEYSTORE"
+      - name: Verificar assinatura e compatibilidade
+        shell: bash
+        run: |
+          APK=byte-vortex-html/android/app/build/outputs/apk/release/app-release.apk
+          TOOLS=$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -1)
+          "$TOOLS" verify --verbose --min-sdk-version 19 "$APK"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Byte-Vortex-Android-4.4-release
+          path: byte-vortex-html/android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+      - name: Publicar APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp byte-vortex-html/android/app/build/outputs/apk/release/app-release.apk Byte-Vortex-Android-4.4.apk
+          gh release create "release-kitkat-${GITHUB_RUN_NUMBER}" Byte-Vortex-Android-4.4.apk --title "Byte Vortex Android 4.4 v1.2.0" --notes 'APK release assinado com chave temporaria, nao preservada. Atualizacoes futuras requerem reinstalacao e podem apagar dados locais. Android 4.4 ou superior; recursos externos exigem internet. Login local e PIX nao estao prontos para uso seguro. Nao testado em aparelho Android 4.4.'
