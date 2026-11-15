@@ -1,0 +1,43 @@
+name: APK Android 4.4 KitKat
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - byte-vortex-html-kitkat.zip
+      - .github/workflows/kitkat.yml
+permissions:
+  contents: write
+jobs:
+  kitkat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Extrair projeto
+        run: unzip -q byte-vortex-html-kitkat.zip
+      - name: Preparar JavaScript antigo
+        working-directory: byte-vortex-html/compat
+        run: npm install --no-audit --no-fund && npm run prepare:html
+      - name: Compilar APK de teste
+        working-directory: byte-vortex-html/android
+        run: gradle assembleDebug --stacktrace
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Byte-Vortex-KitKat
+          path: byte-vortex-html/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+      - name: Publicar APK de teste
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp byte-vortex-html/android/app/build/outputs/apk/debug/app-debug.apk Byte-Vortex-Android-4.4-teste.apk
+          gh release create "kitkat-${GITHUB_RUN_NUMBER}" Byte-Vortex-Android-4.4-teste.apk --title "Byte Vortex Android 4.4 KitKat - teste ${GITHUB_RUN_NUMBER}" --notes 'APK de teste para Android 4.4 ou superior. Ainda não foi testado em aparelho KitKat; a interface e recursos externos podem ter limitações. Não use login e pagamentos em produção.' --prerelease
